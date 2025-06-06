@@ -1,0 +1,233 @@
+** start of index.html **
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Sorting Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <main>
+        <div id="array-container">
+            <div id="starting-array"></div>
+        </div>
+        <div id="btn-container">
+            <button id="generate-btn" type="button">Generate Array</button>
+            <button id="sort-btn" type="button">Sort Array</button>
+        </div>
+    </main>
+    <script src="script.js"></script>
+</body>
+
+</html>
+
+** end of index.html **
+
+** start of styles.css **
+
+* {
+    box-sizing: border-box;
+}
+
+main {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+}
+
+#array-container {
+    max-height: 95vh;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 2px;
+
+}
+
+#array-container>div {
+    min-width: 8rem;
+    height: 2rem;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+    border-radius: 10px;
+    margin-bottom: 0.2rem;
+    border: 2px solid darkgray;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+#starting-array {
+    border: 4px solid darkblue !important;
+}
+
+#btn-container {
+    display: flex;
+    justify-content: space-around;
+}
+
+button {
+    padding: 2px;
+    margin: 5px;
+}
+
+span {
+    border-radius: 2px;
+    padding: 0.5px;
+    margin: 0
+}
+
+@media (min-width: 430px) {
+  #array-container>div {
+    min-width: 12rem;    
+  }
+  span {
+    padding: 1px;
+    margin: 1px;
+  }
+}
+
+** end of styles.css **
+
+** start of script.js **
+
+// 1. Generate a random integer between 1 and 100
+function generateElement() {
+  return Math.floor(Math.random() * 100) + 1;
+}
+
+// 2. Generate an array of five random integers
+function generateArray() {
+  const arr = [];
+  for (let i = 0; i < 5; i++) {
+    arr.push(generateElement());
+  }
+  return arr;
+}
+
+// 3. Create and return an empty div element
+function generateContainer() {
+  const div = document.createElement('div');
+  return div;
+}
+
+// 4 & 5. Fill a container with span elements representing the array
+function fillArrContainer(container, arr) {
+  container.innerHTML = ''; // clear existing content
+  arr.forEach(num => {
+    const span = document.createElement('span');
+    span.textContent = num;
+    container.appendChild(span);
+  });
+}
+
+// 6. Check if the first number is less than or equal to the second
+function isOrdered(a, b) {
+  return a <= b;
+}
+
+// 7 & 8. Swap elements in place if not ordered
+function swapElements(arr, index) {
+  if (!isOrdered(arr[index], arr[index + 1])) {
+    const temp = arr[index];
+    arr[index] = arr[index + 1];
+    arr[index + 1] = temp;
+  }
+}
+
+// 9 & 10. Highlight current comparing elements
+function highlightCurrentEls(container, index) {
+  const children = container.children;
+  if (children[index]) {
+    children[index].style.border = '2px dashed red';
+  }
+  if (children[index + 1]) {
+    children[index + 1].style.border = '2px dashed red';
+  }
+}
+
+// Helper: Deep copy array
+function copyArray(arr) {
+  return arr.slice();
+}
+
+// 11. Handle "Generate Array" button click
+document.getElementById('generate-btn').addEventListener('click', () => {
+  const arrayContainer = document.getElementById('array-container');
+  const startingArrayDiv = document.getElementById('starting-array');
+  const randomArray = generateArray();
+
+  // Clear array-container except for #starting-array
+  const allDivs = Array.from(arrayContainer.children);
+  allDivs.forEach(div => {
+    if (div.id !== 'starting-array') {
+      div.remove();
+    }
+  });
+
+  fillArrContainer(startingArrayDiv, randomArray);
+});
+
+// 12–15. Handle "Sort Array" button click and visualize bubble sort steps
+document.getElementById('sort-btn').addEventListener('click', () => {
+  const arrayContainer = document.getElementById('array-container');
+  const startingArrayDiv = document.getElementById('starting-array');
+
+  // Get the array from startingArray
+  const spans = startingArrayDiv.querySelectorAll('span');
+  const array = Array.from(spans).map(span => parseInt(span.textContent));
+
+  // Clear previous sort steps (but keep #starting-array)
+  const divs = Array.from(arrayContainer.children);
+  divs.forEach(div => {
+    if (div.id !== 'starting-array') {
+      div.remove();
+    }
+  });
+
+  let arrCopy = copyArray(array);
+
+  // Highlight first comparison in the starting array
+  highlightCurrentEls(startingArrayDiv, 0);
+
+  // Bubble Sort visualization
+  let steps = [];
+  steps.push(copyArray(arrCopy)); // initial array
+
+  let swapped;
+  do {
+    swapped = false;
+    for (let i = 0; i < arrCopy.length - 1; i++) {
+      const container = generateContainer();
+      const tempArr = copyArray(arrCopy);
+
+      if (!isOrdered(tempArr[i], tempArr[i + 1])) {
+        swapElements(tempArr, i);
+        swapped = true;
+      }
+
+      fillArrContainer(container, tempArr);
+      highlightCurrentEls(container, i);
+      steps.push(tempArr);
+      arrCopy = tempArr;
+    }
+  } while (swapped);
+
+  // Add each step as a div to arrayContainer
+  for (let i = 1; i < steps.length; i++) {
+    const container = generateContainer();
+    fillArrContainer(container, steps[i]);
+    highlightCurrentEls(container, i % (array.length - 1));
+    arrayContainer.appendChild(container);
+  }
+});
+
+
+** end of script.js **
+
